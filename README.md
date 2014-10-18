@@ -21,6 +21,14 @@ Or install it yourself as:
 
     $ gem install sqs-job
 
+# Cucumber
+
+Populate aws.secrets with `aws_access_key_id` and `aws_secret_access_key`. Then:
+
+    $ conjur env run -c aws.secrets -- conjur policy load -c policy.json cucumber-policy.rb
+    $ conjur env run -c aws.secrets -- env POLICY_FILE=policy.json rake provision
+    $ cucumber
+
 ## Contributing
 
 1. Fork it ( https://github.com/[my-github-username]/sqs-job/fork )

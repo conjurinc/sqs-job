@@ -7,15 +7,15 @@ require 'json'
 module SQS
   module Job
     class << self
-      def send_message type, parameters
+      def send_message queue, type, parameters
         require 'base64'
 
         message = {
           "type" => type,
           "params" => parameters
         }.to_json
-        signature   = signing_key.sign message
-        fingerprint = signing_key.fingerprint
+        signature   = signing_keys.last.sign message
+        fingerprint = signing_keys.last.fingerprint
         message_attributes = {
           "signature" => {
             "string_value" => Base64.strict_encode64(signature),
@@ -43,19 +43,8 @@ module SQS
         ENV['SQS_JOB_MAX_THREADS'] || 10
       end
       
-      def sqs=(sqs); @sqs = sqs; end
-      def sqs
-        @sqs ||= AWS::SQS::new
-      end
-      
       def signing_keys=(keys); @signing_keys = keys; end
       def signing_keys; @signing_keys or raise "No signing keys are configured"; end
-      
-      def queue_name=(name); @queue_name = name; end
-
-        def queue
-        @queue ||= sqs.queues[queue_name]
-      end
       
       def logger=(logger); @logger = logger; end
       def logger

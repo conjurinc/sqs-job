@@ -45,7 +45,6 @@ module SQS::Job
       raise UnrecognizedMessageTypeException, type if type == 'base'
       
       # This would be the place to implement a message whitelist
-      
       message_file = "sqs/job/message/#{type}"
       
       # We might do some caching here at some point...the only reason
@@ -54,6 +53,7 @@ module SQS::Job
       begin
         require message_file
       rescue LoadError
+        SQS::Job.logger.info $!
         raise UnrecognizedMessageTypeException, type
       end
       

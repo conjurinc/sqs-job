@@ -8,10 +8,9 @@ module SQS::Job
     class Base 
       include Validatable
       
-      def initialize params, message_id
+      def initialize params
         # We allow messages with no params field
         @params = (params || {}).symbolize_keys.freeze
-        @message_id = message_id
       end
       
       # Parameters for the message.  This Hash is frozen.

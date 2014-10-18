@@ -25,7 +25,7 @@ module SQS::Job
       begin
         block.call
       rescue => ex
-        SQS::Job.logger.error "Error processing message: #{ex}\n\t#{ex.backtrace.join("\t\n")}"
+        SQS::Job.logger.error "Error processing message: #{ex.class.name} #{ex}\n\t#{ex.backtrace.join("\t\n")}"
         raise ex unless ex.is_a?(UnrecoverableException)
       end
     end
