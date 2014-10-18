@@ -54,4 +54,8 @@ RSpec.configure do |config|
 end
 
 Dir[File.expand_path(File.join(File.dirname(__FILE__),'support','**','*.rb'))].each {|f| require f}
+
 require 'sqs/job'
+require 'slosilo'
+
+KEY = Slosilo::Key.new

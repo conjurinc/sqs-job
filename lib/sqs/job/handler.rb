@@ -21,16 +21,20 @@ module SQS::Job
     # Run this handler
     def run!
       require 'base64'
-      json = JSON.parse Base64.decode64 @sqs_message.body
-      raise "Missing message type in #{json}" unless (type = json['type'])
+      
+      fingerprint = @sqs_message.message_attributes['key_fingerprint'][:string_value]
+      signature   = Base64.strict_decode64(@sqs_message.message_attributes['signature'][:string_value])
+        
+      raise SignatureInvalidException unless SQS::Job.signature_valid? @sqs_message.body, fingerprint, signature
+        
+      msg = JSON.parse(@sqs_message.body)
+      raise MissingTypeException unless (type = msg['type'])
+        
       klass = message_class type
       SQS::Job.logger.info "Received message #{klass}"
-      message_id = json['message_id'] || SecureRandom.uuid
-      message = klass.new(json['params'] || {}, message_id)
-      unless message.valid?
-        SQS::Job.logger.warn "Invalid message: #{message.errors.full_messages.join(', ')}"
-        return false
-      end
+      
+      message = klass.new(msg['params'] || {})
+      raise InvalidMessageException, message unless message.valid?
       message.invoke!
     end
     
@@ -38,7 +42,7 @@ module SQS::Job
     
     def message_class type
       # This seems simpler than trying to fake abstract classes in ruby
-      raise "invalid type: #{type}" if type == 'base'
+      raise UnrecognizedMessageTypeException, type if type == 'base'
       
       # This would be the place to implement a message whitelist
       
@@ -47,7 +51,11 @@ module SQS::Job
       # We might do some caching here at some point...the only reason
       # I'm not adding it now is that the multithreaded environment makes
       # it slightly less than a freebie
-      require message_file
+      begin
+        require message_file
+      rescue LoadError
+        raise UnrecognizedMessageTypeException, type
+      end
       
       message_file.gsub(/^sqs/, 'SQS').classify.constantize
     end
