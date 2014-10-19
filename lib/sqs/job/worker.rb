@@ -4,7 +4,13 @@ module SQS::Job
   # received.  It is also responsible for boot/configuration 
   # stuff.  There should only be one worker per process.
   class Worker
-    def run queue, options = {}
+    attr_reader :queue
+    
+    def initialize(queue)
+      @queue = queue
+    end
+    
+    def run options = {}
       require 'sqs/job/thread_pool'
 
       min_threads = options[:min_threads] || SQS::Job.min_threads 

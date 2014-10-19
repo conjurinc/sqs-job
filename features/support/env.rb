@@ -30,7 +30,7 @@ Before do
   $messages_received.clear
   $worker_thread = Thread.new do
     begin
-      SQS::Job::Worker.new.run $queue
+      SQS::Job::Worker.new($queue).run
     rescue
       $stderr.puts $!
       raise $!
