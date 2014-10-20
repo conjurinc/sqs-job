@@ -2,11 +2,14 @@ module SQS::Job
   module Policy
     def create_signing_key_variables queue_name
       options = {
-        'mime_type' => 'application/x-pem-file',
-        'kind' => 'RSA public key'
+        'mime_type' => 'application/x-pem-file'
       }
-      public_key =  variable(SQS::Job::Policy.public_variable_name(queue_name),  options)
-      private_key = variable(SQS::Job::Policy.private_variable_name(queue_name), options)
+      public_key =  variable(SQS::Job::Policy.public_variable_name(queue_name),  options).tap do |v|
+        v.resource.annotations['kind'] = "RSA public key"
+      end
+      private_key = variable(SQS::Job::Policy.private_variable_name(queue_name), options).tap do |v|
+        v.resource.annotations['kind'] = "RSA private key"
+      end
       [ public_key, private_key ].tap do |vars|
         vars.each do |var|
           options.each do |k,v|
