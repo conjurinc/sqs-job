@@ -2,6 +2,22 @@ require "bundler/gem_tasks"
 
 $LOAD_PATH.unshift 'lib'
 
+require 'ci/reporter/rake/rspec'
+require 'ci/reporter/rake/cucumber'
+require 'cucumber'
+require 'cucumber/rake/task'
+require 'rspec/core/rake_task'
+
+RSpec::Core::RakeTask.new :spec
+Cucumber::Rake::Task.new :features
+
+task :jenkins => ['ci:setup:rspec', :spec, 'ci:setup:cucumber_report_cleanup'] do
+  Cucumber::Rake::Task.new do |t|
+    t.cucumber_opts = "--format CI::Reporter::Cucumber"
+  end.runner.run
+  File.write('build_number', ENV['BUILD_NUMBER']) if ENV['BUILD_NUMBER']
+end
+
 desc 'Creates resources and loads access credentials into Conjur variables. Pre-requisite to cucumber tests.'
 task :provision do
   [ 'POLICY_FILE', 'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY' ].each do |v|

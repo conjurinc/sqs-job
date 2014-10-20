@@ -1,3 +1,5 @@
+features/reports
+spec/reports
 policy.json
 *.gem
 *.rbc
